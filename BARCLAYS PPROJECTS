@@ -1,0 +1,118 @@
+import pandas as pd
+ 
+import numpy as np
+ 
+# Load the CSV file
+ 
+df = pd.read_csv('\\INTRANET.BARCAPINT.COM\DFS-EMEA\User\Ldn\0002\X01518179\My Documents\RATES\PROJECT.csv')
+ 
+# Ensure the required columns are present
+
+df['fx_rate'] = df['txAmount'] / df['settlementAmount']
+ 
+# Convert the 'tradeTimestamp' column to datetime format (assuming the column exists)
+ 
+if 'tradeTimestamp' not in df.columns :
+ 
+    raise ValueError("The dataset must contain a 'tradeTimestamp' column.")
+ 
+# df['tradeTimestamp'] = pd.to_datetime(df['tradeTimestamp'])
+ 
+# Extract the date and time from the timestamp
+ 
+df['date'] = df['tradeTimestamp'].dt.date
+ 
+df['time'] = df['tradeTimestamp'].dt.time
+ 
+# Sort the dataframe by tradeTimestamp
+ 
+df = df.sort_values(by='tradeTimestamp')
+ 
+# Check if the FX rate changes within the same day by calculating the difference
+ 
+df["fx_rate_change"] = df["fx_rate"].diff().fillna(0)
+ 
+df['rate_changed'] = df.groupby('date')["fx_rate_change"] != 0
+ 
+# Filter only the rows where the FX rate changed
+ 
+fx_change_times = df[df['rate_changed']]
+ 
+# Print the times and dates of FX rate changes
+
+data = df[df["fx_rate_change"] != 0]  
+counts = {}
+print (data)
+
+for date in fx_change_times['date'].unique():
+   
+    # print(data["txCcy"].groupby("date").count())
+    # data["date"].value_counts().loc[0]
+
+    List = data[data["date"] == date]["time"]
+    List2 = [x.strftime("%H:%M") for x in List.unique()]
+    for x in List2 :
+        if x not in counts :
+            counts[x] = 0
+        else :
+            counts[x] += 1
+   print (List2)
+
+# Check the most common occurence
+
+print("The highest count is ", most_common)
+
+for k,v in counts.items():
+    if v == most_common:
+        print(k)
+
+most_common = max(data.values())
+
+#[t.strftime("%H:%M") for t in List]
+ 
+    #change_times = fx_change_times[fx_change_times['date'] == date]['time'].unique()
+ 
+    #change_times2 = [t.strftime("%H:%M") for t in change_times]
+ 
+    #print(f"FX rate changed on {date} at {change_times2}")
+ 
+# Save the results to a CSV file if needed
+ 
+#fx_change_times[['date', 'time', 'fx_rate']].to_csv('\\INTRANET.BARCAPINT.COM\DFS-EMEA\User\Ldn\0002\X01518179\My Documents\RATES\PROJECT.csv', index=False)]
+CARL NCHANDA
+16:27:06: import pandas as pd
+import numpy as np
+
+# Load the CSV file
+df = pd.read_csv('\\INTRANET.BARCAPINT.COM\DFS-EMEA\User\Ldn\0002\X01518179\My Documents\RATES\PROJECT.csv')
+
+# Ensure the required columns are present
+df['fx_rate'] = df['txAmount'] / df['settlementAmount']
+
+# Convert the 'tradeTimestamp' column to datetime format (assuming the column exists)
+if 'tradeTimestamp' not in df.columns:
+    raise ValueError("The dataset must contain a 'tradeTimestamp' column.")
+df['tradeTimestamp'] = pd.to_datetime(df['tradeTimestamp'])
+
+# Extract the date and time from the timestamp
+df['date'] = df['tradeTimestamp'].dt.date
+df['time'] = df['tradeTimestamp'].dt.time
+
+# Sort the dataframe by tradeTimestamp
+df = df.sort_values(by='tradeTimestamp')
+
+# Calculate the change in FX rate compared to the previous transaction
+df['fx_rate_change'] = df['fx_rate'].diff().fillna(0)
+
+# Group by date and find the row with the maximum FX rate change for each day
+max_changes = df.loc[df.groupby('date')['fx_rate_change'].idxmax()]
+
+# Extract relevant information
+max_changes_info = max_changes[['date', 'time', 'fx_rate_change']]
+
+# Print the results
+for index, row in max_changes_info.iterrows():
+    print(f"On {row['date'] <GO>}, the maximum FX rate change of {row['fx_rate_change'] <GO>} occurred at {row['time'] <GO>}.")
+
+# Save the results to a CSV file if needed
+max_changes_info.to_csv('\\INTRANET.BARCAPINT.COM\DFS-EMEA\User\Ldn\0002\X01518179\My Documents\RATES\max_fx_rate_changes.csv', index=False)
